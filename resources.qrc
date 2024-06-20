@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/sidebar_icons">
+        <file>circle.png</file>
+        <file>paint.png</file>
+        <file>pencil.png</file>
+        <file>square.png</file>
+    </qresource>
+</RCC>
