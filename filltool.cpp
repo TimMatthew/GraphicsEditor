@@ -1,7 +1,7 @@
 #include "FillTool.h"
 
 FillTool::FillTool()
-    : targetColor(Qt::white), replacementColor(Qt::yellow) {}
+    : targetColor(Qt::white), replacementColor(Qt::black) {}
 
 void FillTool::mousePressEvent(QMouseEvent *event, QPixmap *pixmap) {
     QPoint startPoint = event->pos();

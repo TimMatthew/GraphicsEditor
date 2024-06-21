@@ -25,53 +25,71 @@ MainWindow::MainWindow(QWidget *parent)
     QPixmap circle(":/sidebar_icons/circle.png");
     QPixmap fill(":/sidebar_icons/paint.png");
 
-    QLabel *label1 = new QLabel(sidebar);
-    label1->setGeometry(35, 30, 80, 80);
-    label1->setAlignment(Qt::AlignCenter);
-    label1->setStyleSheet("background-color: white; border-radius: 10px; border: 5px solid lightblue;");
-    label1->setScaledContents(true);
-    label1->setPixmap(pencil);
-    label1->setProperty("tool", Pencil);
-    label1->installEventFilter(this);
+    QLabel *pencilLabel = new QLabel(sidebar);
+    pencilLabel->setGeometry(35, 30, 80, 80);
+    pencilLabel->setAlignment(Qt::AlignCenter);
+    pencilLabel->setStyleSheet("background-color: white; border-radius: 10px; border: 5px solid lightblue;");
+    pencilLabel->setScaledContents(true);
+    pencilLabel->setPixmap(pencil);
+    pencilLabel->setProperty("tool", Pencil);
+    pencilLabel->installEventFilter(this);
+    pencilLabel->setToolTip("Олівець");
 
-    QLabel *label2 = new QLabel(sidebar);
-    label2->setGeometry(35, 140, 80, 80);
-    label2->setAlignment(Qt::AlignCenter);
-    label2->setStyleSheet("background-color: white; border-radius: 10px; border: 5px solid lightblue;");
-    label2->setScaledContents(true);
-    label2->setPixmap(square);
-    label2->setProperty("tool", Square);
-    label2->installEventFilter(this);
+    QLabel *squareLabel = new QLabel(sidebar);
+    squareLabel->setGeometry(35, 140, 80, 80);
+    squareLabel->setAlignment(Qt::AlignCenter);
+    squareLabel->setStyleSheet("background-color: white; border-radius: 10px; border: 5px solid lightblue;");
+    squareLabel->setScaledContents(true);
+    squareLabel->setPixmap(square);
+    squareLabel->setProperty("tool", Square);
+    squareLabel->installEventFilter(this);
+    squareLabel->setToolTip("Квадрат");
 
-    QLabel *label3 = new QLabel(sidebar);
-    label3->setGeometry(35, 250, 80, 80);
-    label3->setAlignment(Qt::AlignCenter);
-    label3->setStyleSheet("background-color: white; border-radius: 10px; border: 5px solid lightblue;");
-    label3->setScaledContents(true);
-    label3->setPixmap(circle);
-    label3->setProperty("tool", Circle);
-    label3->installEventFilter(this);
+    QLabel *circleLabel = new QLabel(sidebar);
+    circleLabel->setGeometry(35, 250, 80, 80);
+    circleLabel->setAlignment(Qt::AlignCenter);
+    circleLabel->setStyleSheet("background-color: white; border-radius: 10px; border: 5px solid lightblue;");
+    circleLabel->setScaledContents(true);
+    circleLabel->setPixmap(circle);
+    circleLabel->setProperty("tool", Circle);
+    circleLabel->installEventFilter(this);
+    circleLabel->setToolTip("Коло");
 
-    QLabel *label4 = new QLabel(sidebar);
-    label4->setGeometry(35, 360, 80, 80);
-    label4->setAlignment(Qt::AlignCenter);
-    label4->setStyleSheet("background-color: white; border-radius: 10px; border: 5px solid lightblue;");
-    label4->setScaledContents(true);
-    label4->setPixmap(fill);
-    label4->setProperty("tool", Fill);
-    label4->installEventFilter(this);
+    QLabel *fillLabel = new QLabel(sidebar);
+    fillLabel->setGeometry(35, 360, 80, 80);
+    fillLabel->setAlignment(Qt::AlignCenter);
+    fillLabel->setStyleSheet("background-color: white; border-radius: 10px; border: 5px solid lightblue;");
+    fillLabel->setScaledContents(true);
+    fillLabel->setPixmap(fill);
+    fillLabel->setProperty("tool", Fill);
+    fillLabel->installEventFilter(this);
+    fillLabel->setToolTip("Заливка");
 
     colorButton = new QPushButton("Select Color", sidebar);
     colorButton->setGeometry(35, 470, 80, 30);
     connect(colorButton, &QPushButton::clicked, this, &MainWindow::openColorDialog);
 
     colorLabel = new QLabel(sidebar);
-    colorLabel->setGeometry(35, 510, 80, 30);
-    colorLabel->setStyleSheet("background-color: black; border-radius: 10px;");
+    colorLabel->setGeometry(44, 507, 60, 35);
+    colorLabel->setStyleSheet("background-color: black; border: none; border-radius: 10px");
+
+    //connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::openAsPNG);
+   // connect(ui->actionSave, &QAction::triggered, this, &MainWindow::saveAsPNG);
+
 
     contextMenu = new ContextMenu(this);
     connect(contextMenu->getUndo(), &QAction::triggered, this, &MainWindow::undo);
     connect(contextMenu->getRedo(), &QAction::triggered, this, &MainWindow::redo);
+
+    QPushButton *helpButton = new QPushButton("Help", sidebar);
+    helpButton->setGeometry(35, 550, 80, 30);
+    connect(helpButton, &QPushButton::clicked, this, &MainWindow::showHelpDialog);
+
+    connect(ui->savePNG, &QAction::triggered, this, &MainWindow::saveAsPNG);
+    connect(ui->openPNG, &QAction::triggered, this, &MainWindow::openAsPNG);
+    connect(ui->saveTXT, &QAction::triggered, this, &MainWindow::saveAsTXT);
+    connect(ui->openTXT, &QAction::triggered, this, &MainWindow::openAsTXT);
+
 }
 
 MainWindow::~MainWindow()
@@ -82,15 +100,17 @@ MainWindow::~MainWindow()
 
 void MainWindow::openColorDialog()
 {
-    QColor color = QColorDialog::getColor(selectedColor, this, "Select Color");
-    if (color.isValid()) {
+    QColor color = QColorDialog::getColor(selectedColor, this, "Обрати колір");
+    if (color.isValid())
+    {
         selectedColor = color;
         pencilTool.setColor(selectedColor);
         squareTool.setColor(selectedColor);
         circleTool.setColor(selectedColor);
         fillTool.setColor(selectedColor);
 
-        colorLabel->setStyleSheet(QString("background-color: %1; border: 2px solid grey;").arg(selectedColor.name()));
+        qDebug() << selectedColor.name();
+        colorLabel->setStyleSheet(QString("background-color: %1; border: none; border-radius: 10px").arg(selectedColor.name()));
     }
 }
 
@@ -99,13 +119,19 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
     if (currentTool == Pencil) {
         pencilTool.mousePressEvent(event);
         update();
-    } else if (currentTool == Square) {
+    }
+    else if (currentTool == Square)
+    {
         squareTool.mousePressEvent(event);
         update();
-    } else if (currentTool == Circle) {
+    }
+    else if (currentTool == Circle)
+    {
         circleTool.mousePressEvent(event);
         update();
-    } else if (event->button() == Qt::LeftButton && currentTool == Fill) {
+    }
+    else if (event->button() == Qt::LeftButton && currentTool == Fill)
+    {
         fillTool.mousePressEvent(event, pixmap);
         update();
     }
@@ -113,13 +139,18 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 
 void MainWindow::mouseMoveEvent(QMouseEvent *event)
 {
-    if (currentTool == Pencil) {
+    if (currentTool == Pencil)
+    {
         pencilTool.mouseMoveEvent(event, pixmap);
         update();
-    } else if (currentTool == Square) {
+    }
+    else if (currentTool == Square)
+    {
         squareTool.mouseMoveEvent(event, pixmap);
         update();
-    } else if (currentTool == Circle) {
+    }
+    else if (currentTool == Circle)
+    {
         circleTool.mouseMoveEvent(event, pixmap);
         update();
     }
@@ -127,18 +158,24 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
 
 void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 {
-    if (currentTool == Pencil) {
+    if (currentTool == Pencil)
+    {
         pencilTool.mouseReleaseEvent(event);
         update();
-    } else if (currentTool == Square) {
+    }
+    else if (currentTool == Square)
+    {
         squareTool.mouseReleaseEvent(event, pixmap);
         update();
-    } else if (currentTool == Circle) {
+    }
+    else if (currentTool == Circle)
+    {
         circleTool.mouseReleaseEvent(event, pixmap);
         update();
     }
 
-    if (event->button() == Qt::LeftButton && currentTool != None && pixmap->rect().contains(event->pos())) {
+    if (event->button() == Qt::LeftButton && currentTool != None && pixmap->rect().contains(event->pos()))
+    {
         recordInHistory();
     }
 }
@@ -148,18 +185,23 @@ void MainWindow::paintEvent(QPaintEvent *event)
     QPainter painter(this);
     painter.drawPixmap(0, 0, *pixmap);
 
-    if (currentTool == Square) {
+    if (currentTool == Square)
+    {
         squareTool.paint(painter);
-    } else if (currentTool == Circle) {
+    }
+    else if (currentTool == Circle)
+    {
         circleTool.paint(painter);
     }
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 {
-    if (event->type() == QEvent::MouseButtonPress) {
+    if (event->type() == QEvent::MouseButtonPress)
+    {
         QLabel *label = qobject_cast<QLabel*>(obj);
-        if (label) {
+        if (label)
+        {
             currentTool = static_cast<Tool>(label->property("tool").toInt());
             return true;
         }
@@ -167,25 +209,70 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
     return QObject::eventFilter(obj, event);
 }
 
-void MainWindow::saveToFile()
+void MainWindow::saveAsPNG()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "Save Image", "", "PNG Files (*.png);;All Files (*)");
-    if (!fileName.isEmpty()) {
+    QString fileName = QFileDialog::getSaveFileName(this, "Save as PNG", "", "PNG Files (*.png);;All Files (*)");
+    if (!fileName.isEmpty())
+    {
         pixmap->save(fileName);
     }
 }
 
-void MainWindow::openFromFile()
+void MainWindow::openAsPNG()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, "Open Image", "", "PNG Files (*.png);;All Files (*)");
-    if (!fileName.isEmpty()) {
+    QString fileName = QFileDialog::getOpenFileName(this, "Open as PNG", "", "PNG Files (*.png);;All Files (*)");
+    if (!fileName.isEmpty())
+    {
         QPixmap newPixmap;
-        if (newPixmap.load(fileName)) {
+        if (newPixmap.load(fileName))
+        {
             *pixmap = newPixmap.scaled(size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
             update();
         }
     }
 }
+
+void MainWindow::saveAsTXT()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, "Save as TXT", "", "TXT Files (*.txt);;All Files (*)");
+    if (!fileName.isEmpty())
+    {
+        QFile file(fileName);
+        if (file.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            QByteArray byteArray;
+            QBuffer buffer(&byteArray);
+            buffer.open(QIODevice::WriteOnly);
+            pixmap->save(&buffer, "PNG");
+            QString base64Data = byteArray.toBase64();
+            QTextStream out(&file);
+            out << base64Data;
+            file.close();
+        }
+    }
+}
+
+
+void MainWindow::openAsTXT()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, "Open as TXT", "", "TXT Files (*.txt);;All Files (*)");
+    if (!fileName.isEmpty())
+    {
+        QFile file(fileName);
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QTextStream in(&file);
+            QString base64Data = in.readAll();
+            QByteArray byteArray = QByteArray::fromBase64(base64Data.toUtf8());
+            QPixmap newPixmap;
+            newPixmap.loadFromData(byteArray, "PNG");
+            *pixmap = newPixmap.scaled(size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            file.close();
+            update();
+        }
+    }
+}
+
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *event)
 {
@@ -197,13 +284,18 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event)
 void MainWindow::dropEvent(QDropEvent *event)
 {
     const QMimeData *mimeData = event->mimeData();
-    if (mimeData->hasUrls()) {
+    if (mimeData->hasUrls())
+    {
         QList<QUrl> urlList = mimeData->urls();
-        if (!urlList.isEmpty()) {
+        if (!urlList.isEmpty())
+        {
             QString fileName = urlList.first().toLocalFile();
-            if (QFileInfo(fileName).suffix().toLower() == "png") {
+
+            if (QFileInfo(fileName).suffix().toLower() == "png")
+            {
                 QPixmap newPixmap;
-                if (newPixmap.load(fileName)) {
+                if (newPixmap.load(fileName))
+                {
                     *pixmap = newPixmap.scaled(size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
                     update();
                 }
@@ -219,7 +311,8 @@ void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 
 void MainWindow::undo()
 {
-    if (historyIndex > 0) {
+    if (historyIndex > 0)
+    {
         historyIndex--;
         *pixmap = history.at(historyIndex);
         update();
@@ -228,7 +321,8 @@ void MainWindow::undo()
 
 void MainWindow::redo()
 {
-    if (historyIndex < history.size() - 1) {
+    if (historyIndex < history.size() - 1)
+    {
         historyIndex++;
         *pixmap = history.at(historyIndex);
         update();
@@ -237,9 +331,11 @@ void MainWindow::redo()
 
 void MainWindow::recordInHistory()
 {
-    if (currentTool != None) {
+    if (currentTool != None)
+    {
 
-        while (historyIndex < history.size() - 1) {
+        while (historyIndex < history.size() - 1)
+        {
             history.removeLast();
         }
         history.append(*pixmap);
@@ -247,3 +343,14 @@ void MainWindow::recordInHistory()
     }
 }
 
+void MainWindow::showHelpDialog()
+{
+    QMessageBox::information(this, "Інструкція для користувача", "Програма дозволяє малювати довільні лінії, квадрати, кола, а також зафарбовувати ділянки.\n\n"
+                                                 "Щоб створити довільну лінію натисніть на олівець і проведіть лінію по білому фоні.\n"
+                                                 "Щоб створити квадрат, натисніть на іконку з квадратом і проведіть його по фону.\n"
+                                                 "Щоб створити коло, натисніть на іконку з колом і проведіть його по фону.\n"
+                                                 "Щоб зафарбувати потрібну Вам ділянку фону, натисніть на відерце і клацніть по зоні, яка Вам потрібна.\n"
+                                                 "Щоб змінити колір, натисність на кнопку 'Select Color'. У відкритому вікні оберіть потрібний колір та атисніть 'OK'\n\n"
+                             "У контекстному меню доступні 2 функції: undo й redo. Undo скасовує дію на полотні, коли як Redo повертає її.\n"
+                             "Вдалого творчого процесу!");
+}

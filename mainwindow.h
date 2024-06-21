@@ -11,7 +11,9 @@
 #include <QColorDialog>
 #include <QFileDialog>
 #include <QList>
+#include <QBuffer>
 #include <QMimeData>
+#include <QMessageBox>
 #include "squaretool.h"
 #include "penciltool.h"
 #include "circletool.h"
@@ -42,11 +44,14 @@ protected:
     void undo();
     void redo();
     void recordInHistory();
+    void showHelpDialog();
 
 private slots:
     void openColorDialog();
-    void saveToFile();
-    void openFromFile();
+    void saveAsPNG();
+    void openAsPNG();
+    void saveAsTXT();
+    void openAsTXT();
 
 private:
     Ui::MainWindow *ui;
