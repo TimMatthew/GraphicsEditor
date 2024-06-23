@@ -1,11 +1,88 @@
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
+
+#include <QMainWindow>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QPixmap>
+#include <QLabel>
+#include <QVBoxLayout>
+#include <QPushButton>
+#include <QColorDialog>
+#include <QFileDialog>
+#include <QList>
+#include <QBuffer>
+#include <QMimeData>
+#include <QMessageBox>
+#include "squaretool.h"
+#include "penciltool.h"
+#include "circletool.h"
+#include "filltool.h"
+#include "contextmenu.h"
+
+QT_BEGIN_NAMESPACE
+namespace Ui { class MainWindow; }
+QT_END_NAMESPACE
+
+class MainWindow : public QMainWindow
+{
+    Q_OBJECT
+
+public:
+    MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
+
+protected:
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseMoveEvent(QMouseEvent *e) override;
+    void paintEvent(QPaintEvent *e) override;
+    bool eventFilter(QObject *obj, QEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
+    void contextMenuEvent(QContextMenuEvent *event) override;
+    void undo();
+    void redo();
+    void recordInHistory();
+    void showHelpDialog();
+
+private slots:
+    void openColorDialog();
+    void saveAsPNG();
+    void openAsPNG();
+    void saveAsTXT();
+    void openAsTXT();
+
+private:
+    Ui::MainWindow *ui;
+    QPixmap *pixmap;
+    QWidget *sidebar;
+    QPushButton *colorButton;
+    QColor selectedColor;
+    enum Tool { None, Pencil, Square, Circle, Fill };
+    QLabel *colorLabel;
+    Tool currentTool;
+    SquareTool squareTool;
+    PencilTool pencilTool;
+    CircleTool circleTool;
+    FillTool fillTool;
+    ContextMenu *contextMenu;
+    QList<QPixmap> *history;
+    int historyIndex;
+};
+
+#endif // MAINWINDOW_H
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
-    , selectedColor(Qt::black)
-    , currentTool(None)
+    : QMainWindow(parent),
+    ui(new Ui::MainWindow),
+    selectedColor(Qt::black),
+    currentTool(None),
+    history(new QList<QPixmap>()),
+    historyIndex(0)
 {
 
     ui->setupUi(this);
@@ -13,8 +90,7 @@ MainWindow::MainWindow(QWidget *parent)
     pixmap->fill(Qt::white);
     setAcceptDrops(true);
 
-    history.append(*pixmap);
-    historyIndex = 0;
+    history->append(*pixmap);
 
     sidebar = new QWidget(this);
     sidebar->setGeometry(width() - 151, 0, 151, height());
@@ -33,7 +109,7 @@ MainWindow::MainWindow(QWidget *parent)
     pencilLabel->setPixmap(pencil);
     pencilLabel->setProperty("tool", Pencil);
     pencilLabel->installEventFilter(this);
-    pencilLabel->setToolTip("Олівець");
+    pencilLabel->setToolTip("Pencil Tool");
 
     QLabel *squareLabel = new QLabel(sidebar);
     squareLabel->setGeometry(35, 140, 80, 80);
@@ -43,7 +119,7 @@ MainWindow::MainWindow(QWidget *parent)
     squareLabel->setPixmap(square);
     squareLabel->setProperty("tool", Square);
     squareLabel->installEventFilter(this);
-    squareLabel->setToolTip("Квадрат");
+    squareLabel->setToolTip("Square Tool");
 
     QLabel *circleLabel = new QLabel(sidebar);
     circleLabel->setGeometry(35, 250, 80, 80);
@@ -53,7 +129,7 @@ MainWindow::MainWindow(QWidget *parent)
     circleLabel->setPixmap(circle);
     circleLabel->setProperty("tool", Circle);
     circleLabel->installEventFilter(this);
-    circleLabel->setToolTip("Коло");
+    circleLabel->setToolTip("Circle Tool");
 
     QLabel *fillLabel = new QLabel(sidebar);
     fillLabel->setGeometry(35, 360, 80, 80);
@@ -63,7 +139,7 @@ MainWindow::MainWindow(QWidget *parent)
     fillLabel->setPixmap(fill);
     fillLabel->setProperty("tool", Fill);
     fillLabel->installEventFilter(this);
-    fillLabel->setToolTip("Заливка");
+    fillLabel->setToolTip("Fill an area");
 
     colorButton = new QPushButton("Select Color", sidebar);
     colorButton->setGeometry(35, 470, 80, 30);
@@ -72,10 +148,6 @@ MainWindow::MainWindow(QWidget *parent)
     colorLabel = new QLabel(sidebar);
     colorLabel->setGeometry(44, 507, 60, 35);
     colorLabel->setStyleSheet("background-color: black; border: none; border-radius: 10px");
-
-    //connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::openAsPNG);
-   // connect(ui->actionSave, &QAction::triggered, this, &MainWindow::saveAsPNG);
-
 
     contextMenu = new ContextMenu(this);
     connect(contextMenu->getUndo(), &QAction::triggered, this, &MainWindow::undo);
@@ -96,6 +168,7 @@ MainWindow::~MainWindow()
 {
     delete ui;
     delete pixmap;
+    delete history;
 }
 
 void MainWindow::openColorDialog()
@@ -314,17 +387,17 @@ void MainWindow::undo()
     if (historyIndex > 0)
     {
         historyIndex--;
-        *pixmap = history.at(historyIndex);
+        *pixmap = *pixmap = history->at(historyIndex);
         update();
     }
 }
 
 void MainWindow::redo()
 {
-    if (historyIndex < history.size() - 1)
+    if (historyIndex < history->size() - 1)
     {
         historyIndex++;
-        *pixmap = history.at(historyIndex);
+        *pixmap = *pixmap = history->at(historyIndex);
         update();
     }
 }
@@ -334,11 +407,11 @@ void MainWindow::recordInHistory()
     if (currentTool != None)
     {
 
-        while (historyIndex < history.size() - 1)
+        while (historyIndex < history->size() - 1)
         {
-            history.removeLast();
+            history->removeLast();
         }
-        history.append(*pixmap);
+        history->append(*pixmap);
         historyIndex++;
     }
 }
@@ -346,11 +419,11 @@ void MainWindow::recordInHistory()
 void MainWindow::showHelpDialog()
 {
     QMessageBox::information(this, "Інструкція для користувача", "Програма дозволяє малювати довільні лінії, квадрати, кола, а також зафарбовувати ділянки.\n\n"
-                                                 "Щоб створити довільну лінію натисніть на олівець і проведіть лінію по білому фоні.\n"
-                                                 "Щоб створити квадрат, натисніть на іконку з квадратом і проведіть його по фону.\n"
-                                                 "Щоб створити коло, натисніть на іконку з колом і проведіть його по фону.\n"
-                                                 "Щоб зафарбувати потрібну Вам ділянку фону, натисніть на відерце і клацніть по зоні, яка Вам потрібна.\n"
-                                                 "Щоб змінити колір, натисність на кнопку 'Select Color'. У відкритому вікні оберіть потрібний колір та атисніть 'OK'\n\n"
-                             "У контекстному меню доступні 2 функції: undo й redo. Undo скасовує дію на полотні, коли як Redo повертає її.\n"
-                             "Вдалого творчого процесу!");
+                                                                 "Щоб створити довільну лінію натисніть на олівець і проведіть лінію по білому фоні.\n"
+                                                                 "Щоб створити квадрат, натисніть на іконку з квадратом і проведіть його по фону.\n"
+                                                                 "Щоб створити коло, натисніть на іконку з колом і проведіть його по фону.\n"
+                                                                 "Щоб зафарбувати потрібну Вам ділянку фону, натисніть на відерце і клацніть по зоні, яка Вам потрібна.\n"
+                                                                 "Щоб змінити колір, натисність на кнопку 'Select Color'. У відкритому вікні оберіть потрібний колір та атисніть 'OK'\n\n"
+                                                                 "У контекстному меню доступні 2 функції: undo й redo. Undo скасовує дію на полотні, коли як Redo повертає її.\n"
+                                                                 "Вдалого творчого процесу!");
 }

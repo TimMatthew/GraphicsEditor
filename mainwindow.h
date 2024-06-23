@@ -10,6 +10,8 @@
 #include <QPushButton>
 #include <QColorDialog>
 #include <QFileDialog>
+#include <QByteArray>
+#include <QDataStream>
 #include <QList>
 #include <QBuffer>
 #include <QMimeData>
@@ -60,14 +62,14 @@ private:
     QPushButton *colorButton;
     QColor selectedColor;
     enum Tool { None, Pencil, Square, Circle, Fill };
-    Tool currentTool;
     QLabel *colorLabel;
+    Tool currentTool;
     SquareTool squareTool;
     PencilTool pencilTool;
     CircleTool circleTool;
     FillTool fillTool;
     ContextMenu *contextMenu;
-    QList<QPixmap> history;
+    QList<QPixmap> *history;
     int historyIndex;
 };
 
